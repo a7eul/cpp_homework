@@ -1,4 +1,6 @@
-// Тема: Файловый ввод/вывод
+// Тема: Препроцессор, макросы
+#define TAX 0.20
+
 #include <iostream>
 #include <string>
 #include <fstream>  // Тема: Файловый ввод/вывод
@@ -13,9 +15,11 @@ struct Item {
 
 // Тема: Указатели, арифметика указателей
 void printItem(const Item* item) {
+    double priceWithTax = item->price * (1 + TAX);  // Тема: Использование макроса
     cout << item->name << " | Цена: " << item->price 
-         << " | Количество: " << item->quantity 
-         << " | Стоимость: " << item->price * item->quantity << "\n";
+         << " (с НДС: " << priceWithTax << ") | Количество: " 
+         << item->quantity << " | Стоимость: " 
+         << item->price * item->quantity << "\n";
 }
 
 // Тема: Указатели, поиск в массиве
@@ -109,28 +113,68 @@ int main() {
     n = loadFromFile(items, "items.txt");
     cout << "Загружено товаров: " << n << "\n";
 
-    cout << "\n=== Все товары ===\n";
-    printAll(items, n);
+    // Тема: Интерактивное меню
+    int choice;
+    do {
+        cout << "\n1. Показать все товары\n";
+        cout << "2. Найти товар и изменить количество\n";
+        cout << "3. Показать общую стоимость\n";
+        cout << "4. Сохранить и выйти\n";
+        cout << "Выбор: ";
+        cin >> choice;
 
-    cout << "\n=== Поиск товара ===\n";
-    string searchName;
-    cout << "Введите название товара: ";
-    cin >> searchName;
+        switch (choice) {
+            case 1:
+                // Тема: Вывод через указатели
+                printAll(items, n);
+                break;
 
-    Item* found = findItem(items, n, searchName);
-    if (found != nullptr) {
-        cout << "Найден: ";
-        printItem(found);
-    } else {
-        cout << "Товар не найден\n";
-    }
+            case 2: {
+                string searchName;
+                cout << "Введите название товара: ";
+                cin >> searchName;
 
-    cout << "\n=== Общая стоимость ===\n";
-    double total = calculateTotal(items, n);
-    cout << "Общая стоимость: " << total << "\n";
+                // Тема: Поиск через указатели
+                Item* found = findItem(items, n, searchName);
+                if (found != nullptr) {
+                    cout << "Найден: ";
+                    printItem(found);
 
-    // Тема: Сохранение в файл
-    saveToFile(items, n, "items.txt");
+                    int change;
+                    cout << "Изменить количество (+/-): ";
+                    cin >> change;
+                    found->quantity += change;
+
+                    if (found->quantity < 0) {
+                        found->quantity = 0;
+                    }
+
+                    cout << "Новое количество: " << found->quantity << "\n";
+                    cout << "Новая стоимость: " 
+                         << found->price * found->quantity << "\n";
+                } else {
+                    cout << "Товар не найден\n";
+                }
+                break;
+            }
+case 3: {
+                // Тема: Расчет с макросом TAX
+                double total = calculateTotal(items, n);
+                double totalWithTax = total * (1 + TAX);
+                cout << "Общая стоимость: " << total << "\n";
+                cout << "С НДС (" << TAX * 100 << "%): " << totalWithTax << "\n";
+                break;
+            }
+
+            case 4:
+                // Тема: Сохранение в файл
+                saveToFile(items, n, "items.txt");
+                break;
+
+            default:
+                cout << "Неверный выбор\n";
+        }
+    } while (choice != 4);
 
     // Тема: Освобождение динамической памяти
     delete[] items;
